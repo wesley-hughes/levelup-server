@@ -1,0 +1,25 @@
+[
+    {
+        "model": "levelupapi.game",
+        "pk": 1,
+        "fields": {
+            "title": "Eat The Rich",
+            "maker": "US Tax Code",
+            "number_of_players": 5,
+            "skill_level": "Advanced",
+            "game_type": 2,
+            "creator":1
+        }
+    },
+    {
+        "model": "levelupapi.game",
+        "pk": 2,
+        "fields": {
+            "title": "Sorry",
+            "maker": "Hasbro",
+            "number_of_players": 2,
+            "skill_level": "Easy",
+            "game_type": 1,
+            "creator":1        }
+    }
+]
