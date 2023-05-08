@@ -31,7 +31,42 @@ class EventView(ViewSet):
             events = events.filter(game_id=game_id)
         serializer = EventSerializer(events, many=True)
         return Response(serializer.data)
+    def create(self, request):
+        """Handle POST operations
 
+        Returns
+            Response -- JSON serialized event instance
+        """
+        gamer = Gamer.objects.get(user=request.auth.user)
+        game = Game.objects.get(pk=request.data["game"])
+
+        event = Event.objects.create(
+            description=request.data["description"],
+            date=request.data["date"],
+            time=request.data["time"],
+            game=game,
+            organizer=gamer
+        )
+        serializer = EventSerializer(event)
+        return Response(serializer.data)
+    def update(self, request, pk):
+        """Handle PUT requests for a game
+
+        Returns:
+            Response -- Empty body with 204 status code
+        """
+
+        event = Event.objects.get(pk=pk)
+        event.description = request.data["description"]
+        event.date = request.data["date"]
+        event.time = request.data["time"]
+
+        game = Game.objects.get(pk=request.data["game"])
+        event.game = game
+
+        event.save()
+
+        return Response(None, status=status.HTTP_204_NO_CONTENT)
 
 class GameSerializer(serializers.ModelSerializer):
     class Meta:
