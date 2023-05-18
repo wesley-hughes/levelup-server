@@ -6,7 +6,7 @@ from django.views import View
 from levelupreports.views.helpers import dict_fetch_all
 
 
-class UserGameList(View):
+class UserEventList(View):
     def get(self, request):
         with connection.cursor() as db_cursor:
 
@@ -15,15 +15,15 @@ class UserGameList(View):
             SELECT
                 gr.id gamer_id,
                 u.first_name || ' ' || u.last_name AS full_name,
-                g.id,
-                g.title,
-                g.maker,
-                g.skill_level,
-                g.number_of_players,
-                g.game_type_id
+                e.id,
+                e.date,
+                e.time,
+                g.title AS game_name
             FROM levelupapi_gamer gr
+            JOIN levelupapi_event e
+                ON gr.id = e.organizer_id
             JOIN levelupapi_game g
-                ON gr.id = g.creator_id
+                ON g.id = e.game_id
             JOIN auth_user u
                 ON u.id = gr.user_id
             """)
@@ -46,58 +46,59 @@ class UserGameList(View):
             #         "skill_level": 3,
             #         "number_of_players": 4,
             #         "game_type_id": 2
-            #       },
+
+            # [
+            #   {
+            #     "gamer_id": 1,
+            #     "full_name": "Molly Ringwald",
+            #     "events": [
             #       {
-            #         "id": 2,
-            #         "title": "Foo 2",
-            #         "maker": "Bar Games 2",
-            #         "skill_level": 3,
-            #         "number_of_players": 4,
-            #         "game_type_id": 2
+            #         "id": 5,
+            #         "date": "2020-12-23",
+            #         "time": "19:00",
+            #         "game_name": "Fortress America"
             #       }
             #     ]
-            #   },
+            #   }
             # ]
 
-            games_by_user = []
+            events_by_user = []
 
             for row in dataset:
                 # TODO: Create a dictionary called game that includes 
                 # the name, description, number_of_players, maker,
                 # game_type_id, and skill_level from the row dictionary
-                game = {
+                event = {
                     "id": row['id'],
-                    "title": row['title'],
-                    "maker": row['maker'],
-                    "skill_level": row['skill_level'],
-                    "number_of_players": row['number_of_players'],
-                    "game_type_id": row['game_type_id']
+                    "date": row['date'],
+                    "time": row['time'],
+                    "game_name": row['game_name']
                 }
                 
                 # See if the gamer has been added to the games_by_user list already
                 user_dict = None
-                for user_game in games_by_user:
-                     if user_game['gamer_id'] == row['gamer_id']:
-                         user_dict = user_game
+                for user_event in events_by_user:
+                     if user_event['gamer_id'] == row['gamer_id']:
+                         user_dict = user_event
                 
                 
                 if user_dict:
                     # If the user_dict is already in the games_by_user list, append the game to the games list
-                    user_dict['games'].append(game)
+                    user_dict['events'].append(event)
                 else:
-                    # If the user is not on the games_by_user list, create and add the user to the list
-                    games_by_user.append({
+                    # If the user is not on the events_by_user list, create and add the user to the list
+                    events_by_user.append({
                         "gamer_id": row['gamer_id'],
                         "full_name": row['full_name'],
-                        "games": [game]
+                        "events": [event]
                     })
         
         # The template string must match the file name of the html template
-        template = 'users/list_with_games.html'
+        template = 'users/list_with_events.html'
         
         # The context will be a dictionary that the template can access to show data
         context = {
-            "usergame_list": games_by_user
+            "userevent_list": events_by_user
         }
 
         return render(request, template, context)
